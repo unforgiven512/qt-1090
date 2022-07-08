@@ -25,30 +25,31 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include	<cmath>
-#include	"message-handling.h"
-#include	"icao-cache.h"
-#include	"aircraft-handler.h"
-#include	"qt-1090.h"
-#include	"adsb-constants.h"
+#include <cmath>
+#include "message-handling.h"
+#include "icao-cache.h"
+#include "aircraft-handler.h"
+#include "qt-1090.h"
+#include "adsb-constants.h"
 
-static
-int     computeIdentity (uint8_t *msg) {
-int a,b,c,d;
 
-        a = ((msg[3] & 0x80) >> 5) |
-            ((msg[2] & 0x02) >> 0) |
-            ((msg[2] & 0x08) >> 3);
-        b = ((msg[3] & 0x02) << 1) |
-            ((msg[3] & 0x08) >> 2) |
-            ((msg[3] & 0x20) >> 5);
-        c = ((msg[2] & 0x01) << 2) |
-            ((msg[2] & 0x04) >> 1) |
-            ((msg[2] & 0x10) >> 4);
-        d = ((msg[3] & 0x01) << 2) |
-            ((msg[3] & 0x04) >> 1) |
-            ((msg[3] & 0x10) >> 4);
-        return  a * 1000 + b * 100 + c * 10 + d;
+
+static int computeIdentity(uint8_t *msg) {
+	gint a,b,c,d;
+
+		a = ((msg[3] & 0x80) >> 5) |
+			((msg[2] & 0x02) >> 0) |
+			((msg[2] & 0x08) >> 3);
+		b = ((msg[3] & 0x02) << 1) |
+			((msg[3] & 0x08) >> 2) |
+			((msg[3] & 0x20) >> 5);
+		c = ((msg[2] & 0x01) << 2) |
+			((msg[2] & 0x04) >> 1) |
+			((msg[2] & 0x10) >> 4);
+		d = ((msg[3] & 0x01) << 2) |
+			((msg[3] & 0x04) >> 1) |
+			((msg[3] & 0x10) >> 4);
+		return  a * 1000 + b * 100 + c * 10 + d;
 }
 
 /*
@@ -57,8 +58,8 @@ int a,b,c,d;
  *	structure.
  */
 	message::message (int fix_errors,
-	                  icaoCache *icao_cache,
-	                  uint8_t *msg_o) {
+					  icaoCache *icao_cache,
+					  uint8_t *msg_o) {
 uint32_t crc2;
 
 	this	-> icao_cache = icao_cache;
@@ -70,8 +71,8 @@ uint32_t crc2;
 
 /* CRC is always the last three bytes. */
 	crc = ((uint32_t)msg [(msgbits / 8) - 3] << 16) |
-	      ((uint32_t)msg [(msgbits / 8) - 2] << 8) |
-	       (uint32_t)msg [(msgbits / 8) - 1];
+		  ((uint32_t)msg [(msgbits / 8) - 2] << 8) |
+		   (uint32_t)msg [(msgbits / 8) - 1];
 	crc2 = computeChecksum (msg, msgbits);
 
 /*	Check CRC and fix single bit errors using the CRC when
@@ -82,19 +83,19 @@ uint32_t crc2;
 //
 //	fix errors - if any -
 	if (!crcok && (fix_errors != NO_ERRORFIX) &&
-	                        (msgtype == 11 || msgtype == 17)) {
+							(msgtype == 11 || msgtype == 17)) {
 	   errorbit = fixSingleBitErrors (msg, msgbits);
 	   if (errorbit != -1) {
-	      crc	= computeChecksum (msg, msgbits);
-	      crcok	= true;
+		  crc	= computeChecksum (msg, msgbits);
+		  crcok	= true;
 	   }
 	   else
 	   if ((fix_errors == STRONG_ERRORFIX) && (msgtype == 17)) {
-	      errorbit = fixTwoBitsErrors (msg, msgbits);
-	      if (errorbit != -1) {
-	         crc	= computeChecksum (msg, msgbits);
-	         crcok	= true;
-	      }
+		  errorbit = fixTwoBitsErrors (msg, msgbits);
+		  if (errorbit != -1) {
+			 crc	= computeChecksum (msg, msgbits);
+			 crcok	= true;
+		  }
 	   }
 	}
 /*
@@ -148,14 +149,14 @@ uint32_t crc2;
  *	addresses.
  */
 	   if (crcok && (errorbit == -1)) {
-	      uint32_t addr = (aa1 << 16) | (aa2 << 8) | aa3;
-	      icao_cache ->  addRecentlySeenICAOAddr (addr);
+		  uint32_t addr = (aa1 << 16) | (aa2 << 8) | aa3;
+		  icao_cache ->  addRecentlySeenICAOAddr (addr);
 	   }
 	}
 
 /*	Decode 13 bit altitude for DF0, DF4, DF16, DF20 */
 	if (msgtype == 0 || msgtype == 4 ||
-	    msgtype == 16 || msgtype == 20) {
+		msgtype == 16 || msgtype == 20) {
 	   altitude = decodeAC13Field (msg, &unit);
 	}
 
@@ -202,11 +203,11 @@ int j;
 	} else
 	if (msgtype == 17) {
 	   print_msgtype_17 ();
-	} else 
+	} else
 	if (check_crc)
 	   fprintf (stdout, "DF %d with good CRC received "
-	              "(decoding still not implemented).\n",
-	              msgtype);
+				  "(decoding still not implemented).\n",
+				  msgtype);
 }
 
 /************************************************************************
@@ -216,12 +217,12 @@ bool	message::bruteForceAP (uint8_t *msg) {
 uint8_t aux [LONG_MSG_BITS / 8];
 
 	if (!(msgtype == 0 ||         /* Short air surveillance */
-	      msgtype == 4 ||         /* Surveillance, altitude reply */
-	      msgtype == 5 ||         /* Surveillance, identity reply */
-	      msgtype == 16 ||        /* Long Air-Air survillance */
-	      msgtype == 20 ||        /* Comm-A, altitude request */
-	      msgtype == 21 ||        /* Comm-A, identity request */
-	      msgtype == 24))
+		  msgtype == 4 ||         /* Surveillance, altitude reply */
+		  msgtype == 5 ||         /* Surveillance, identity reply */
+		  msgtype == 16 ||        /* Long Air-Air survillance */
+		  msgtype == 20 ||        /* Comm-A, altitude request */
+		  msgtype == 21 ||        /* Comm-A, identity request */
+		  msgtype == 24))
 	   return false;
 //	Comm-C ELM */
 	uint32_t addr;
@@ -233,46 +234,46 @@ uint8_t aux [LONG_MSG_BITS / 8];
 
 //	Compute the CRC of the message and XOR it with the AP field
 //	so that we recover the address, because:
-//		(ADDR xor CRC) xor CRC = ADDR. 
+//		(ADDR xor CRC) xor CRC = ADDR.
 
-        crc = computeChecksum (aux, msgbits);
-        aux [lastbyte]		^= crc & 0xff;
-        aux [lastbyte-1]	^= (crc >> 8) & 0xff;
-        aux [lastbyte-2]	^= (crc >> 16) & 0xff;
-        
+		crc = computeChecksum (aux, msgbits);
+		aux [lastbyte]		^= crc & 0xff;
+		aux [lastbyte-1]	^= (crc >> 8) & 0xff;
+		aux [lastbyte-2]	^= (crc >> 16) & 0xff;
+
 //	If the obtained address exists in our cache we consider
-//	the message valid. 
-        addr = aux [lastbyte] |
-	      (aux [lastbyte-1] << 8) | (aux [lastbyte-2] << 16);
-        if (icao_cache -> ICAOAddressWasRecentlySeen (addr)) {
-            aa1 = aux [lastbyte - 2];
-            aa2 = aux [lastbyte - 1];
-            aa3 = aux [lastbyte];
-            return true;
-        }
+//	the message valid.
+		addr = aux [lastbyte] |
+		  (aux [lastbyte-1] << 8) | (aux [lastbyte-2] << 16);
+		if (icao_cache -> ICAOAddressWasRecentlySeen (addr)) {
+			aa1 = aux [lastbyte - 2];
+			aa2 = aux [lastbyte - 1];
+			aa3 = aux [lastbyte];
+			return true;
+		}
 	return false;
 }
 
 // For more info: http://en.wikipedia.org/wiki/Gillham_code
 //
 static int decodeID13Field (int ID13Field) {
-    int hexGillham = 0;
+	int hexGillham = 0;
 
-    if (ID13Field & 0x1000) {hexGillham |= 0x0010;} // Bit 12 = C1
-    if (ID13Field & 0x0800) {hexGillham |= 0x1000;} // Bit 11 = A1
-    if (ID13Field & 0x0400) {hexGillham |= 0x0020;} // Bit 10 = C2
-    if (ID13Field & 0x0200) {hexGillham |= 0x2000;} // Bit  9 = A2
-    if (ID13Field & 0x0100) {hexGillham |= 0x0040;} // Bit  8 = C4
-    if (ID13Field & 0x0080) {hexGillham |= 0x4000;} // Bit  7 = A4
-  //if (ID13Field & 0x0040) {hexGillham |= 0x0800;} // Bit  6 = X  or M 
-    if (ID13Field & 0x0020) {hexGillham |= 0x0100;} // Bit  5 = B1 
-    if (ID13Field & 0x0010) {hexGillham |= 0x0001;} // Bit  4 = D1 or Q
-    if (ID13Field & 0x0008) {hexGillham |= 0x0200;} // Bit  3 = B2
-    if (ID13Field & 0x0004) {hexGillham |= 0x0002;} // Bit  2 = D2
-    if (ID13Field & 0x0002) {hexGillham |= 0x0400;} // Bit  1 = B4
-    if (ID13Field & 0x0001) {hexGillham |= 0x0004;} // Bit  0 = D4
+	if (ID13Field & 0x1000) {hexGillham |= 0x0010;} // Bit 12 = C1
+	if (ID13Field & 0x0800) {hexGillham |= 0x1000;} // Bit 11 = A1
+	if (ID13Field & 0x0400) {hexGillham |= 0x0020;} // Bit 10 = C2
+	if (ID13Field & 0x0200) {hexGillham |= 0x2000;} // Bit  9 = A2
+	if (ID13Field & 0x0100) {hexGillham |= 0x0040;} // Bit  8 = C4
+	if (ID13Field & 0x0080) {hexGillham |= 0x4000;} // Bit  7 = A4
+  //if (ID13Field & 0x0040) {hexGillham |= 0x0800;} // Bit  6 = X  or M
+	if (ID13Field & 0x0020) {hexGillham |= 0x0100;} // Bit  5 = B1
+	if (ID13Field & 0x0010) {hexGillham |= 0x0001;} // Bit  4 = D1 or Q
+	if (ID13Field & 0x0008) {hexGillham |= 0x0200;} // Bit  3 = B2
+	if (ID13Field & 0x0004) {hexGillham |= 0x0002;} // Bit  2 = D2
+	if (ID13Field & 0x0002) {hexGillham |= 0x0400;} // Bit  1 = B4
+	if (ID13Field & 0x0001) {hexGillham |= 0x0004;} // Bit  0 = D4
 
-    return (hexGillham);
+	return (hexGillham);
 }
 /*
  *	Decode the 13 bit AC altitude field (in DF 20 and others).
@@ -286,15 +287,15 @@ int q_bit = msg [3] & (1 << 4);
 	   *unit = UNIT_FEET;
 	   if (q_bit != 0) {
 //	N is the 11 bit integer resulting from the removal of bit
-//	Q and M 
-               int n = ((msg [2] &   31) << 6) |
-                       ((msg [3] & 0x80) >> 2) |
-                       ((msg [3] & 0x20) >> 1) |
-                        (msg [3] &   15);
+//	Q and M
+			   int n = ((msg [2] &   31) << 6) |
+					   ((msg [3] & 0x80) >> 2) |
+					   ((msg [3] & 0x20) >> 1) |
+						(msg [3] &   15);
 //	The final altitude is due to the resulting number multiplied
 //	by 25, minus 1000.
-               return n * 25 - 1000;
-           } else {
+			   return n * 25 - 1000;
+		   } else {
 //	N is an 11 bit Gillham coded altitude
 //            int n = modeAToModeC (decodeID13Field (AC13Field));
 //            if (n < -12) {
@@ -318,7 +319,7 @@ int	message::decodeAC12Field (uint8_t *msg, int *unit) {
 int q_bit = msg [5] & 1;
 
 	if (q_bit) {
-//	N is the 11 bit integer resulting from the removal of bit Q 
+//	N is the 11 bit integer resulting from the removal of bit Q
 	   *unit = UNIT_FEET;
 	   int n = ((msg [5] >> 1) << 4) | ((msg [6] & 0xF0) >> 4);
 //	The final altitude is computed:
@@ -357,27 +358,27 @@ const char *getMEDescription (int metype, int mesub) {
 const char *mename = "Unknown";
 
 	if (metype >= 1 && metype <= 4)
-	    mename = "Aircraft Identification and Category";
+		mename = "Aircraft Identification and Category";
 	else if (metype >= 5 && metype <= 8)
-	    mename = "Surface Position";
+		mename = "Surface Position";
 	else if (metype >= 9 && metype <= 18)
-	    mename = "Airborne Position (Baro Altitude)";
+		mename = "Airborne Position (Baro Altitude)";
 	else if (metype == 19 && mesub >=1 && mesub <= 4)
-	    mename = "Airborne Velocity";
+		mename = "Airborne Velocity";
 	else if (metype >= 20 && metype <= 22)
-	    mename = "Airborne Position (GNSS Height)";
+		mename = "Airborne Position (GNSS Height)";
 	else if (metype == 23 && mesub == 0)
-	    mename = "Test Message";
+		mename = "Test Message";
 	else if (metype == 24 && mesub == 1)
-	    mename = "Surface System Status";
+		mename = "Surface System Status";
 	else if (metype == 28 && mesub == 1)
-	    mename = "Extended Squitter Aircraft Status (Emergency)";
+		mename = "Extended Squitter Aircraft Status (Emergency)";
 	else if (metype == 28 && mesub == 2)
-	    mename = "Extended Squitter Aircraft Status (1090ES TCAS RA)";
+		mename = "Extended Squitter Aircraft Status (1090ES TCAS RA)";
 	else if (metype == 29 && (mesub == 0 || mesub == 1))
-	    mename = "Target State and Status Message";
+		mename = "Target State and Status Message";
 	else if (metype == 31 && (mesub == 0 || mesub == 1))
-	    mename = "Aircraft Operational Status Message";
+		mename = "Aircraft Operational Status Message";
 	return mename;
 }
 
@@ -399,12 +400,12 @@ const char *ais_charset =
 
 //
 
-        /* DF 0 */
+		/* DF 0 */
 void	message::print_msgtype_0 (void) {
 	if (msgtype == 0) {
 	   fprintf (stdout, "DF 0: Short Air-Air Surveillance.\n");
 	   fprintf (stdout, "  Altitude       : %d %s\n", altitude,
-	           (unit == UNIT_METERS) ? "meters" : "feet");
+			   (unit == UNIT_METERS) ? "meters" : "feet");
 	   fprintf (stdout, "  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
 	}
 }
@@ -412,12 +413,12 @@ void	message::print_msgtype_0 (void) {
 void	message::print_msgtype_4_20 (void) {
 	if (msgtype == 4 || msgtype == 20) {
 	   fprintf (stdout, "DF %d: %s, Altitude Reply.\n", msgtype,
-	                  (msgtype == 4) ? "Surveillance" : "Comm-B");
+					  (msgtype == 4) ? "Surveillance" : "Comm-B");
 	   fprintf (stdout, "  Flight Status  : %s\n", fs_str [fs]);
 	   fprintf (stdout, "  DR             : %d\n", dr);
 	   fprintf (stdout, "  UM             : %d\n", um);
-           fprintf (stdout, "  Altitude       : %d %s\n", altitude,
-	                (unit == UNIT_METERS) ? "meters" : "feet");
+		   fprintf (stdout, "  Altitude       : %d %s\n", altitude,
+					(unit == UNIT_METERS) ? "meters" : "feet");
 	   fprintf (stdout, "  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
 	   if (msgtype == 20) {
 //	TODO: 56 bits DF20 MB additional field. */
@@ -428,7 +429,7 @@ void	message::print_msgtype_4_20 (void) {
 void	message::print_msgtype_5_21 (void) {
 	if (msgtype == 5 || msgtype == 21) {
 	   fprintf (stdout, "DF %d: %s, Identity Reply.\n", msgtype,
-	                     (msgtype == 5) ? "Surveillance" : "Comm-B");
+						 (msgtype == 5) ? "Surveillance" : "Comm-B");
 	   fprintf (stdout, "  Flight Status  : %s\n", fs_str [fs]);
 	   fprintf (stdout, "  DR             : %d\n", dr);
 	   fprintf (stdout, "  UM             : %d\n", um);
@@ -459,113 +460,113 @@ void	message::print_msgtype_17 (void) {
 	   fprintf (stdout, "  Extended Squitter  Type: %d\n", metype);
 	   fprintf (stdout, "  Extended Squitter  Sub : %d\n", mesub);
 	   fprintf (stdout, "  Extended Squitter  Name: %s\n",
-	                        getMEDescription (metype, mesub));
+							getMEDescription (metype, mesub));
 
 //	Decode the extended squitter message. */
 	   if (metype >= 1 && metype <= 4) {
 //	Aircraft identification. */
-	      const char *ac_type_str [4] = {
-	                               "Aircraft Type D",
-	                               "Aircraft Type C",
-	                               "Aircraft Type B",
-	                               "Aircraft Type A"
-	      };
+		  const char *ac_type_str [4] = {
+								   "Aircraft Type D",
+								   "Aircraft Type C",
+								   "Aircraft Type B",
+								   "Aircraft Type A"
+		  };
 
-	      fprintf (stdout, "    Aircraft Type  : %s\n",
-	                           ac_type_str [aircraft_type]);
-	      fprintf (stdout, "    Identification : %s\n", flight);
+		  fprintf (stdout, "    Aircraft Type  : %s\n",
+							   ac_type_str [aircraft_type]);
+		  fprintf (stdout, "    Identification : %s\n", flight);
 	   } else
 	   if (metype >= 9 && metype <= 18) {
-	      fprintf (stdout, "    F flag   : %s\n", fflag ? "odd" : "even");
-	      fprintf (stdout, "    T flag   : %s\n", tflag ? "UTC" : "non-UTC");
-	      fprintf (stdout, "    Altitude : %d feet\n", altitude);
-	      fprintf (stdout, "    Latitude : %d (not decoded)\n", raw_latitude);
-	      fprintf (stdout, "    Longitude: %d (not decoded)\n", raw_longitude);
+		  fprintf (stdout, "    F flag   : %s\n", fflag ? "odd" : "even");
+		  fprintf (stdout, "    T flag   : %s\n", tflag ? "UTC" : "non-UTC");
+		  fprintf (stdout, "    Altitude : %d feet\n", altitude);
+		  fprintf (stdout, "    Latitude : %d (not decoded)\n", raw_latitude);
+		  fprintf (stdout, "    Longitude: %d (not decoded)\n", raw_longitude);
 	   } else
 	   if (metype == 19 && mesub >= 1 && mesub <= 4) {
-	      if (mesub == 1 || mesub == 2) {
+		  if (mesub == 1 || mesub == 2) {
 //	Velocity */
-                fprintf (stdout, "    EW direction      : %d\n", ew_dir);
-                fprintf (stdout, "    EW velocity       : %d\n", ew_velocity);
-                fprintf (stdout, "    NS direction      : %d\n", ns_dir);
-                fprintf (stdout, "    NS velocity       : %d\n", ns_velocity);
-                fprintf (stdout, "    Vertical rate src : %d\n", vert_rate_source);
-                fprintf (stdout, "    Vertical rate sign: %d\n", vert_rate_sign);
-                fprintf (stdout, "    Vertical rate     : %d\n", vert_rate);
-	      } else
-	      if (mesub == 3 || mesub == 4) {
-	         fprintf (stdout, "    Heading status: %d", heading_is_valid);
-	         fprintf (stdout, "    Heading: %d", heading);
-	      }
+				fprintf (stdout, "    EW direction      : %d\n", ew_dir);
+				fprintf (stdout, "    EW velocity       : %d\n", ew_velocity);
+				fprintf (stdout, "    NS direction      : %d\n", ns_dir);
+				fprintf (stdout, "    NS velocity       : %d\n", ns_velocity);
+				fprintf (stdout, "    Vertical rate src : %d\n", vert_rate_source);
+				fprintf (stdout, "    Vertical rate sign: %d\n", vert_rate_sign);
+				fprintf (stdout, "    Vertical rate     : %d\n", vert_rate);
+		  } else
+		  if (mesub == 3 || mesub == 4) {
+			 fprintf (stdout, "    Heading status: %d", heading_is_valid);
+			 fprintf (stdout, "    Heading: %d", heading);
+		  }
 	   } else {
-	      fprintf (stdout, "    Unrecognized ME type: %d subtype: %d\n", 
-	                                   metype, mesub);
+		  fprintf (stdout, "    Unrecognized ME type: %d subtype: %d\n",
+									   metype, mesub);
 	   }
-	} 
+	}
 }
 
 void	message::recordExtendedSquitter (uint8_t *msg) {
 	if (msgtype == 17) {
 	   if (metype >= 1 && metype <= 4) {
-	      setFlightName (msg);	// fill in text repr of flight
+		  setFlightName (msg);	// fill in text repr of flight
 	   }
 	   else
 	   if (metype >= 9 && metype <= 18) {
 /*	Airborne position Message */
-	      fflag = msg [6] & (1 << 2);
-	      tflag = msg [6] & (1 << 3);
-	      altitude = decodeAC12Field (msg, &unit);
-	      raw_latitude = ((msg [6] & 3) << 15) |
-	                      (msg [7] << 7) |
-	                      (msg [8] >> 1);
-	      raw_longitude = ((msg [8] &1) << 16) |
-	                       (msg [9] << 8) |
-	                        msg [10];
+		  fflag = msg [6] & (1 << 2);
+		  tflag = msg [6] & (1 << 3);
+		  altitude = decodeAC12Field (msg, &unit);
+		  raw_latitude = ((msg [6] & 3) << 15) |
+						  (msg [7] << 7) |
+						  (msg [8] >> 1);
+		  raw_longitude = ((msg [8] &1) << 16) |
+						   (msg [9] << 8) |
+							msg [10];
 	   }
 	   else
 	   if (metype == 19 && mesub >= 1 && mesub <= 4) {
 /*	Airborne Velocity Message */
-	      if (mesub == 1 || mesub == 2) {
-	         ew_dir		= (msg [5] & 04) >> 2;
-	         ew_velocity	= ((msg [5] & 3) << 8) | msg[6];
-	         ns_dir		= (msg [7] & 0x80) >> 7;
-	         ns_velocity	= ((msg [7] & 0x7f) << 3) |
-	                                    ((msg [8] & 0xe0) >> 5);
-	         vert_rate_source = (msg [8] & 0x10) >> 4;
-	         vert_rate_sign = (msg [8] & 0x8) >> 3;
-	         vert_rate	= ((msg [8] & 7) << 6) |
-	                                       ((msg [9] & 0xfc) >> 2);
+		  if (mesub == 1 || mesub == 2) {
+			 ew_dir		= (msg [5] & 04) >> 2;
+			 ew_velocity	= ((msg [5] & 3) << 8) | msg[6];
+			 ns_dir		= (msg [7] & 0x80) >> 7;
+			 ns_velocity	= ((msg [7] & 0x7f) << 3) |
+										((msg [8] & 0xe0) >> 5);
+			 vert_rate_source = (msg [8] & 0x10) >> 4;
+			 vert_rate_sign = (msg [8] & 0x8) >> 3;
+			 vert_rate	= ((msg [8] & 7) << 6) |
+										   ((msg [9] & 0xfc) >> 2);
 /* Compute velocity and angle from the two speed components. */
-	         velocity	= sqrt (ns_velocity * ns_velocity+
-	                                ew_velocity * ew_velocity);
-	         if (velocity != 0) {
-	            int ewv = ew_velocity;
-	            int nsv = ns_velocity;
-	            double heading;
+			 velocity	= sqrt (ns_velocity * ns_velocity+
+									ew_velocity * ew_velocity);
+			 if (velocity != 0) {
+				int ewv = ew_velocity;
+				int nsv = ns_velocity;
+				double heading;
 
-                    if (ew_dir)
-	               ewv *= -1;
-                    if (ns_dir)
-	               nsv *= -1;
-                    heading = atan2 (ewv, nsv);
-                    /* Convert to degrees. */
-                    heading = heading * 360 / (M_PI * 2);
-                    /* We don't want negative values but a 0-360 scale. */
-                    if (heading < 0) 
-	               heading += 360;
-	            if (heading > 360)
-	               heading = 0;
-	         } else {
-	            heading = 0;
-	         }  
-              }
-	      else
-	      if (mesub == 3 || mesub == 4) {
-	         heading_is_valid = msg [5] & (1 << 2);
-	         if (heading_is_valid)
-	            heading = (360.0 / 128) * (((msg [5] & 3) << 5) |
-	                                                 (msg [6] >> 3));
-	      }
+					if (ew_dir)
+				   ewv *= -1;
+					if (ns_dir)
+				   nsv *= -1;
+					heading = atan2 (ewv, nsv);
+					/* Convert to degrees. */
+					heading = heading * 360 / (M_PI * 2);
+					/* We don't want negative values but a 0-360 scale. */
+					if (heading < 0)
+				   heading += 360;
+				if (heading > 360)
+				   heading = 0;
+			 } else {
+				heading = 0;
+			 }
+			  }
+		  else
+		  if (mesub == 3 || mesub == 4) {
+			 heading_is_valid = msg [5] & (1 << 2);
+			 if (heading_is_valid)
+				heading = (360.0 / 128) * (((msg [5] & 3) << 5) |
+													 (msg [6] >> 3));
+		  }
 	   }
 	}
 }

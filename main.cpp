@@ -1,4 +1,3 @@
-#
 /*
  *    Copyright (C) 2018
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
@@ -20,7 +19,7 @@
  *    along with qt-1090; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *      qt-1090 is based on the dump1090 program 
+ *      qt-1090 is based on the dump1090 program
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
  *      all rights acknowledged.
 
@@ -41,57 +40,62 @@
 #define	GITHASH	"      "
 #endif
 
-QString fullPathfor (QString v, QString aa) {
-QString fileName;
+QString fullPathfor(QString v, QString aa) {
+	QString fileName;
 
-	if (v == QString (""))
-	   return QString ("/tmp/xxx");
+	if (v == QString("")) {
+		return (QString("/tmp/xxx"));
+	}
 
-	if (v. at (0) == QChar ('/'))           // full path specified
-	   return v;
+	if (v.at(0) == QChar('/')) {		// full path specified
+		return (v);
+	}
 
-	fileName = QDir::homePath ();
-	fileName. append ("/");
-	fileName. append (v);
-	fileName = QDir::toNativeSeparators (fileName);
+	fileName = QDir::homePath();
+	fileName.append("/");
+	fileName.append(v);
+	fileName = QDir::toNativeSeparators(fileName);
 
-	if (!fileName. endsWith (aa))
-	   fileName. append (aa);
+	if (!fileName.endsWith(aa)) {
+		fileName.append(aa);
+	}
 
-	return fileName;
+	return (fileName);
 }
 
-void    	setTranslator	(QString Language);
+void setTranslator(QString Language);
 
-int     main (int argc, char **argv) {
-QString initFileName	= fullPathfor (QString (DEFAULT_INI), ".ini");
-qt1090  *MyRadioInterface;
-QSettings       *dumpSettings;           // ini file
-int     j;
-char	*fileName	= NULL;
-int	deviceIndex	= 0;
-int	freq		= 1090000000;
-int	opt;
-bool	network		= false;
+
+
+int main(int argc, char *argv[]) {
+	QString initFileName = fullPathfor(QString(DEFAULT_INI), ".ini");
+	qt1090 *MyRadioInterface;
+	QSettings *dumpSettings;           // ini file
+	int j;
+	char *fileName = NULL;
+	int deviceIndex = 0;
+	int freq = 1090000000;
+	int opt;
+	bool network = false;
 
 	QCoreApplication::setOrganizationName	("Lazy Chair Computing");
 	QCoreApplication::setOrganizationDomain ("Lazy Chair Computing");
 	QCoreApplication::setApplicationName	("qt-1090");
 	QCoreApplication::setApplicationVersion (QString (CURRENT_VERSION) + " Git: " + GITHASH);
 
-//	Parse the command line options 
+//	Parse the command line options
 
 	while ((opt = getopt (argc, argv, "f:F:n")) != -1) {
 	   switch (opt) {	// there aren't many
-	      case 'f':
-	      case 'F':	
-	         freq	= atoi (optarg);
-	         break;
-	      case 'n':
-	         network	= true;
-	         break;
-	      default:
-	         break;
+		  case 'f':
+		  case 'F':
+			 freq	= atoi (optarg);
+			 break;
+		  case 'n':
+			 network	= true;
+			 break;
+		  default:
+			 break;
 	   }
 	}
 	dumpSettings =  new QSettings (initFileName, QSettings::IniFormat);
@@ -113,7 +117,7 @@ bool	network		= false;
 	MyRadioInterface = new qt1090 (dumpSettings, freq, network);
 	MyRadioInterface -> show ();
 
-        a. exec ();
+		a. exec ();
 /*
  *      done:
  */
@@ -135,7 +139,7 @@ QTranslator *Translator = new QTranslator;
 //
 //	what about Dutch?
 	bool TranslatorLoaded =
-	             Translator -> load (QString(":/i18n/") + Language);
+				 Translator -> load (QString(":/i18n/") + Language);
 	qDebug() << "main:" <<  "Set language" << Language;
 	QCoreApplication::installTranslator (Translator);
 
